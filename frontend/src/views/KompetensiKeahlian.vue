@@ -20,7 +20,7 @@
               v-if="!imageErrors[comp.id]"
             />
             <div v-if="imageErrors[comp.id]" class="text-center">
-              <div class="text-6xl mb-2">💻</div>
+              <div class="text-6xl mb-2"></div>
               <p class="text-blue-800 font-semibold">{{ comp.name }}</p>
             </div>
           </div>
@@ -39,117 +39,123 @@
         </div>
       </div>
 
-      <!-- Upload Materi Section -->
+      <!-- Download Materi Section -->
       <div class="bg-white rounded-xl shadow-lg p-6 mb-12">
-        <h2 class="text-2xl font-bold text-blue-800 mb-6 flex items-center">
-          <span class="mr-2"></span> Upload Materi Pembelajaran
-        </h2>
+        <div class="flex items-center justify-between mb-6">
+          <h2 class="text-2xl font-bold text-blue-800 flex items-center">
+            <span class="mr-2">📚</span> Download Materi Pembelajaran
+          </h2>
+          <div class="text-sm text-gray-600 bg-blue-50 px-4 py-2 rounded-lg">
+            Total: <strong>{{ getTotalMateri() }}</strong> materi tersedia
+          </div>
+        </div>
 
-        <!-- Tabs untuk setiap jurusan -->
+        <!-- Tabs Jurusan -->
         <div class="mb-6">
           <div class="flex flex-wrap gap-2 border-b border-gray-200 overflow-x-auto">
             <button
               v-for="comp in competencies"
               :key="comp.id"
-              @click="activeTab = comp.id"
-              class="px-4 py-2 font-medium text-sm rounded-t-lg transition-all whitespace-nowrap"
+              @click="activeTab = comp.id; activeKelas = 'X'"
+              class="px-4 py-2 font-medium text-sm rounded-t-lg transition-all whitespace-nowrap flex items-center gap-2"
               :class="activeTab === comp.id ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'"
             >
-              {{ getShortName(comp.name) }}
+              <span>{{ getShortName(comp.name) }}</span>
             </button>
           </div>
         </div>
 
-        <!-- Upload Form untuk setiap jurusan -->
-        <div v-for="comp in competencies" :key="comp.id" v-show="activeTab === comp.id" class="p-4 bg-gray-50 rounded-lg">
-          <h3 class="font-bold text-lg text-blue-800 mb-4">{{ comp.name }}</h3>
+        <!-- Content untuk setiap jurusan -->
+        <div v-for="comp in competencies" :key="comp.id" v-show="activeTab === comp.id">
+          <div class="bg-gradient-to-r from-blue-50 to-blue-100 rounded-lg p-4 mb-4">
+            <h3 class="font-bold text-lg text-blue-800">{{ comp.name }}</h3>
+            <p class="text-sm text-gray-600 mt-1">Pilih materi pembelajaran berdasarkan kelas</p>
+          </div>
 
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <!-- Upload Area -->
-            <div class="border-2 border-dashed border-blue-300 rounded-lg p-6 text-center hover:border-blue-500 transition cursor-pointer"
-                 @click="triggerFileInput(comp.id)"
-                 @dragover.prevent="draggingComp = comp.id"
-                 @dragleave.prevent="draggingComp = null"
-                 @drop.prevent="handleDrop($event, comp.id)"
-                 :class="{ 'border-blue-500 bg-blue-50': draggingComp === comp.id }">
+          <!-- Tabs Kelas (X, XI, XII) -->
+          <div class="mb-6">
+            <div class="flex gap-2">
+              <button
+                v-for="kelas in ['X', 'XI', 'XII']"
+                :key="kelas"
+                @click="activeKelas = kelas"
+                class="px-6 py-2 font-semibold rounded-lg transition-all"
+                :class="activeKelas === kelas
+                  ? 'bg-blue-600 text-white shadow-lg'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'"
+              >
+                Kelas {{ kelas }}
+                <span class="ml-1 text-xs opacity-75">
+                  ({{ getMateriByKelas(comp.id, kelas).length }} materi)
+                </span>
+              </button>
+            </div>
+          </div>
 
-              <input
-                :ref="el => fileInputs[comp.id] = el"
-                type="file"
-                accept=".pdf,.doc,.docx,.ppt,.pptx,.zip,.rar"
-                class="hidden"
-                @change="handleFileSelect($event, comp.id)"
-              />
+          <!-- List Materi per Kelas -->
+          <div class="space-y-3">
+            <div
+              v-for="(materi, idx) in getMateriByKelas(comp.id, activeKelas)"
+              :key="idx"
+              class="flex items-center justify-between p-4 bg-white border border-gray-200 rounded-lg hover:shadow-md transition-all hover:border-blue-300"
+            >
+              <div class="flex items-center flex-1 min-w-0 mr-4">
+                <!-- Icon berdasarkan tipe file -->
+                <div class="flex-shrink-0 mr-3">
+                  <div
+                    class="w-12 h-12 rounded-lg flex items-center justify-center text-2xl"
+                    :class="getFileIconClass(materi.type)"
+                  >
+                    {{ getFileIcon(materi.type) }}
+                  </div>
+                </div>
 
-              <div v-if="!uploadedFiles[comp.id]" class="space-y-2">
-                <div class="text-4xl mb-2">📁</div>
-                <p class="text-sm font-medium text-gray-700">Klik atau drag file ke sini</p>
-                <p class="text-xs text-gray-500">PDF, DOC, PPT, ZIP, RAR (Max. 10MB)</p>
+                <!-- Info Materi -->
+                <div class="flex-1 min-w-0">
+                  <h4 class="font-semibold text-gray-900 truncate">{{ materi.name }}</h4>
+                  <div class="flex items-center gap-3 mt-1 text-xs text-gray-500 flex-wrap">
+                    <span class="bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-medium">
+                      Kelas {{ materi.kelas }}
+                    </span>
+                    <span class="bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-medium">
+                      {{ materi.semester }}
+                    </span>
+                    <span class="flex items-center">
+                      <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                      {{ materi.type.toUpperCase() }}
+                    </span>
+                    <span class="flex items-center">
+                      <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4" />
+                      </svg>
+                      {{ formatFileSize(materi.size) }}
+                    </span>
+                  </div>
+                </div>
               </div>
 
-              <div v-else class="space-y-2">
-                <div class="text-4xl mb-2">📄</div>
-                <p class="text-sm font-medium text-gray-700 truncate px-2">{{ uploadedFiles[comp.id].name }}</p>
-                <p class="text-xs text-gray-500">{{ formatFileSize(uploadedFiles[comp.id].size) }}</p>
+              <!-- Tombol Download -->
+              <div class="flex items-center gap-2 flex-shrink-0">
                 <button
-                  @click.stop="removeFile(comp.id)"
-                  class="text-xs text-red-600 hover:text-red-800 underline font-medium"
+                  @click="downloadMateri(materi, comp.name)"
+                  class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-all flex items-center gap-2 shadow-sm hover:shadow-md"
+                  :title="`Download ${materi.name}`"
                 >
-                  Hapus File
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                  </svg>
+                  <span class="hidden sm:inline">Download</span>
                 </button>
               </div>
             </div>
 
-            <!-- Upload Button & List -->
-            <div class="flex flex-col space-y-3">
-              <button
-                @click="uploadMateri(comp.id)"
-                :disabled="!uploadedFiles[comp.id]"
-                class="w-full bg-blue-600 text-white px-4 py-3 rounded-lg hover:bg-blue-700 transition disabled:bg-gray-400 disabled:cursor-not-allowed font-medium shadow-md"
-              >
-                <span v-if="!uploading[comp.id]">📤 Upload Materi</span>
-                <span v-else>⏳ Mengupload...</span>
-              </button>
-
-              <!-- Info -->
-              <div class="bg-blue-50 border border-blue-200 rounded p-3">
-                <p class="text-xs text-blue-800">
-                  <strong>💡 announcement:</strong> PDF, DOC, PPT, ZIP, RAR (Max. 10MB)
-                </p>
-              </div>
-
-              <!-- List Materi yang Sudah Diupload -->
-              <div v-if="materiList[comp.id] && materiList[comp.id].length > 0" class="mt-2">
-                <h4 class="font-semibold text-sm text-gray-700 mb-2 flex items-center">
-                  <span class="mr-2">📚</span> Materi Tersedia ({{ materiList[comp.id].length }}):
-                </h4>
-                <ul class="space-y-2 max-h-48 overflow-y-auto">
-                  <li v-for="(materi, idx) in materiList[comp.id]" :key="idx"
-                      class="flex items-center justify-between text-xs bg-white p-3 rounded border hover:shadow-md transition">
-                    <div class="flex items-center flex-1 min-w-0 mr-2">
-                      <span class="mr-2 text-lg">📄</span>
-                      <span class="truncate font-medium text-gray-700">{{ materi.name }}</span>
-                    </div>
-                    <div class="flex items-center space-x-2 flex-shrink-0">
-                      <span class="text-gray-500 text-xs">{{ formatFileSize(materi.size) }}</span>
-                      <button @click="downloadMateri(materi, comp.id)"
-                              class="text-blue-600 hover:text-blue-800 p-1 hover:bg-blue-50 rounded transition"
-                              title="Download">
-                        ⬇️
-                      </button>
-                      <button @click="deleteMateri(materi, comp.id)"
-                              class="text-red-600 hover:text-red-800 p-1 hover:bg-red-50 rounded transition"
-                              title="Hapus">
-                        🗑️
-                      </button>
-                    </div>
-                  </li>
-                </ul>
-              </div>
-
-              <div v-else class="text-center py-4 text-gray-500 text-sm">
-                Belum ada materi yang diupload
-              </div>
+            <!-- Empty State -->
+            <div v-if="getMateriByKelas(comp.id, activeKelas).length === 0" class="text-center py-12 text-gray-500">
+              <div class="text-6xl mb-4">📭</div>
+              <p class="text-lg font-medium">Belum ada materi untuk Kelas {{ activeKelas }}</p>
+              <p class="text-sm mt-2">Materi akan segera ditambahkan</p>
             </div>
           </div>
         </div>
@@ -159,7 +165,7 @@
 </template>
 
 <script setup>
-import { ref, computed, reactive } from 'vue'
+import { ref, computed } from 'vue'
 import { useSchoolStore } from '@/stores/school'
 
 const schoolStore = useSchoolStore()
@@ -167,21 +173,85 @@ const competencies = computed(() => schoolStore.competencies)
 
 const imageErrors = ref({})
 const activeTab = ref(1)
-const draggingComp = ref(null)
-const uploadedFiles = ref({})
-const materiList = ref({})
-const fileInputs = reactive({})
-const uploading = ref({})
+const activeKelas = ref('X')
 
-// Initialize materiList for each competency
-competencies.value.forEach(comp => {
-  if (!materiList.value[comp.id]) {
-    materiList.value[comp.id] = []
+// Data Materi: 2 materi per kelas (X, XI, XII) untuk setiap jurusan
+const materiData = {
+  1: { // TKJ - Teknik Komputer dan Jaringan
+    name: 'Teknik Komputer dan Jaringan (TKJ)',
+    materi: [
+      // Kelas X
+      { name: 'Dasar-Dasar Jaringan Komputer', kelas: 'X', semester: 'Ganjil', type: 'pdf', size: 2500000 },
+      { name: 'Instalasi Sistem Operasi Windows & Linux', kelas: 'X', semester: 'Genap', type: 'pdf', size: 3200000 },
+      // Kelas XI
+      { name: 'Konfigurasi Router Cisco & Subnetting', kelas: 'XI', semester: 'Ganjil', type: 'pdf', size: 3800000 },
+      { name: 'Administrasi Server Linux', kelas: 'XI', semester: 'Genap', type: 'pdf', size: 4100000 },
+      // Kelas XII
+      { name: 'Keamanan Jaringan & Firewall Configuration', kelas: 'XII', semester: 'Ganjil', type: 'pdf', size: 4500000 },
+      { name: 'Troubleshooting & Network Management', kelas: 'XII', semester: 'Genap', type: 'pdf', size: 3900000 }
+    ]
+  },
+  2: { // TKR - Teknik Kendaraan Ringan
+    name: 'Teknik Kendaraan Ringan (TKR)',
+    materi: [
+      // Kelas X
+      { name: 'Pengantar Otomotif & K3 Bengkel', kelas: 'X', semester: 'Ganjil', type: 'pdf', size: 2800000 },
+      { name: 'Dasar-Dasar Mesin Kendaraan', kelas: 'X', semester: 'Genap', type: 'pdf', size: 3100000 },
+      // Kelas XI
+      { name: 'Sistem Bahan Bakar Injeksi (EFI)', kelas: 'XI', semester: 'Ganjil', type: 'pdf', size: 3500000 },
+      { name: 'Sistem Rem & ABS pada Kendaraan', kelas: 'XI', semester: 'Genap', type: 'pdf', size: 3200000 },
+      // Kelas XII
+      { name: 'Overhaul Engine & Transmisi', kelas: 'XII', semester: 'Ganjil', type: 'pdf', size: 4200000 },
+      { name: 'Diagnosa Kerusakan dengan Scanner', kelas: 'XII', semester: 'Genap', type: 'pdf', size: 3800000 }
+    ]
+  },
+  3: { // TAB - Teknik Alat Berat
+    name: 'Teknik Alat Berat (TAB)',
+    materi: [
+      // Kelas X
+      { name: 'Pengenal Alat Berat & Komponen Utama', kelas: 'X', semester: 'Ganjil', type: 'pdf', size: 2600000 },
+      { name: 'K3 Operasional Alat Berat', kelas: 'X', semester: 'Genap', type: 'pdf', size: 2200000 },
+      // Kelas XI
+      { name: 'Sistem Hidrolik pada Excavator', kelas: 'XI', semester: 'Ganjil', type: 'pdf', size: 3400000 },
+      { name: 'Sistem Transmisi Wheel Loader', kelas: 'XI', semester: 'Genap', type: 'pdf', size: 3100000 },
+      // Kelas XII
+      { name: 'Maintenance & Service Bulldozer', kelas: 'XII', semester: 'Ganjil', type: 'pdf', size: 4000000 },
+      { name: 'Troubleshooting Engine Heavy Equipment', kelas: 'XII', semester: 'Genap', type: 'pdf', size: 3700000 }
+    ]
+  },
+  4: { // Tata Busana
+    name: 'Tata Busana (TB)',
+    materi: [
+      // Kelas X
+      { name: 'Dasar-Dasar Pola & Pengenalan Alat Jahit', kelas: 'X', semester: 'Ganjil', type: 'pdf', size: 2400000 },
+      { name: 'Teknik Menjahit Dasar & Jenis Jahitan', kelas: 'X', semester: 'Genap', type: 'pdf', size: 2900000 },
+      // Kelas XI
+      { name: 'Pembuatan Pola Dasar Rok & Blus', kelas: 'XI', semester: 'Ganjil', type: 'pdf', size: 3200000 },
+      { name: 'Fashion Illustration & Desain Mode', kelas: 'XI', semester: 'Genap', type: 'pdf', size: 3500000 },
+      // Kelas XII
+      { name: 'Teknik Draping & Pembuatan Gaun Pesta', kelas: 'XII', semester: 'Ganjil', type: 'pdf', size: 4100000 },
+      { name: 'Produksi Busana & Quality Control', kelas: 'XII', semester: 'Genap', type: 'pdf', size: 3600000 }
+    ]
+  },
+  5: { // DPIB
+    name: 'Desain Pemodelan dan Informasi Bangunan (DPIB)',
+    materi: [
+      // Kelas X
+      { name: 'Pengantar Gambar Teknik & AutoCAD 2D', kelas: 'X', semester: 'Ganjil', type: 'pdf', size: 2900000 },
+      { name: 'Menggambar Denah & Tampak Rumah', kelas: 'X', semester: 'Genap', type: 'pdf', size: 3300000 },
+      // Kelas XI
+      { name: '3D Modeling dengan SketchUp', kelas: 'XI', semester: 'Ganjil', type: 'pdf', size: 4800000 },
+      { name: 'Struktur Bangunan Beton Bertulang', kelas: 'XI', semester: 'Genap', type: 'pdf', size: 3700000 },
+      // Kelas XII
+      { name: 'BIM dengan Revit Architecture', kelas: 'XII', semester: 'Ganjil', type: 'pdf', size: 5100000 },
+      { name: 'RAB (Rencana Anggaran Biaya) Bangunan', kelas: 'XII', semester: 'Genap', type: 'pdf', size: 2800000 }
+    ]
   }
-  if (!uploading.value[comp.id]) {
-    uploading.value[comp.id] = false
-  }
-})
+}
+
+const handleImageError = (compId) => {
+  imageErrors.value[compId] = true
+}
 
 const getShortName = (fullName) => {
   const shortNames = {
@@ -192,10 +262,6 @@ const getShortName = (fullName) => {
     'Desain Pemodelan dan Informasi Bangunan (DPIB)': 'DPIB'
   }
   return shortNames[fullName] || fullName.split(' ')[0]
-}
-
-const handleImageError = (compId) => {
-  imageErrors.value[compId] = true
 }
 
 const getCareers = (compId) => {
@@ -209,103 +275,40 @@ const getCareers = (compId) => {
   return careers[compId] || []
 }
 
-const triggerFileInput = (compId) => {
-  if (fileInputs[compId]) {
-    fileInputs[compId].click()
-  }
+const getMateriByKelas = (compId, kelas) => {
+  if (!materiData[compId]) return []
+  return materiData[compId].materi.filter(m => m.kelas === kelas)
 }
 
-const handleFileSelect = (event, compId) => {
-  const file = event.target.files[0]
-  if (file) validateAndSetFile(file, compId)
+const getTotalMateri = () => {
+  return Object.values(materiData).reduce((total, data) => total + data.materi.length, 0)
 }
 
-const handleDrop = (event, compId) => {
-  draggingComp.value = null
-  const file = event.dataTransfer.files[0]
-  if (file) validateAndSetFile(file, compId)
+const getFileIcon = (type) => {
+  const icons = {
+    pdf: '',
+    doc: '📘',
+    ppt: '📙',
+    zip: '️',
+    rar: '🗜️'
+  }
+  return icons[type] || '📄'
 }
 
-const validateAndSetFile = (file, compId) => {
-  const maxSize = 10 * 1024 * 1024 // 10MB
-  const validTypes = [
-    'application/pdf',
-    'application/msword',
-    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-    'application/vnd.ms-powerpoint',
-    'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-    'application/zip',
-    'application/x-rar-compressed'
-  ]
-
-  const validExtensions = ['.pdf', '.doc', '.docx', '.ppt', '.pptx', '.zip', '.rar']
-  const fileExtension = '.' + file.name.split('.').pop().toLowerCase()
-
-  if (file.size > maxSize) {
-    alert('❌ Ukuran file terlalu besar! Maksimal 10MB')
-    return
+const getFileIconClass = (type) => {
+  const classes = {
+    pdf: 'bg-red-100',
+    doc: 'bg-blue-100',
+    ppt: 'bg-orange-100',
+    zip: 'bg-yellow-100',
+    rar: 'bg-yellow-100'
   }
-
-  if (!validTypes.includes(file.type) && !validExtensions.includes(fileExtension)) {
-    alert('❌ Format file tidak didukung!\nGunakan format: PDF, DOC, DOCX, PPT, PPTX, ZIP, atau RAR')
-    return
-  }
-
-  uploadedFiles.value[compId] = file
+  return classes[type] || 'bg-gray-100'
 }
 
-const removeFile = (compId) => {
-  uploadedFiles.value[compId] = null
-  if (fileInputs[compId]) {
-    fileInputs[compId].value = ''
-  }
-}
-
-const uploadMateri = async (compId) => {
-  if (!uploadedFiles.value[compId]) {
-    alert(' Pilih file terlebih dahulu!')
-    return
-  }
-
-  uploading.value[compId] = true
-
-  // Simulate upload delay
-  await new Promise(resolve => setTimeout(resolve, 1500))
-
-  if (!materiList.value[compId]) {
-    materiList.value[compId] = []
-  }
-
-  materiList.value[compId].push({
-    name: uploadedFiles.value[compId].name,
-    size: uploadedFiles.value[compId].size,
-    uploadedAt: new Date().toISOString(),
-    id: Date.now()
-  })
-
-  alert('✅ Materi berhasil diupload untuk ' + getShortName(competencies.value.find(c => c.id === compId).name))
-
-  uploadedFiles.value[compId] = null
-  uploading.value[compId] = false
-
-  if (fileInputs[compId]) {
-    fileInputs[compId].value = ''
-  }
-}
-
-const downloadMateri = (materi, compId) => {
-  // Simulate download
-  alert(` Downloading: ${materi.name}\n\n(Dalam implementasi nyata, file akan didownload dari server)`)
-}
-
-const deleteMateri = (materi, compId) => {
-  if (confirm(`🗑️ Yakin ingin menghapus materi "${materi.name}"?`)) {
-    const index = materiList.value[compId].findIndex(m => m.id === materi.id)
-    if (index > -1) {
-      materiList.value[compId].splice(index, 1)
-      alert('✅ Materi berhasil dihapus')
-    }
-  }
+const downloadMateri = (materi, compName) => {
+  const message = `📥 Download Materi\n\nNama: ${materi.name}\nJurusan: ${compName}\nKelas: ${materi.kelas} - ${materi.semester}\nUkuran: ${formatFileSize(materi.size)}\n\n(Dalam implementasi nyata, file akan didownload dari server)`
+  alert(message)
 }
 
 const formatFileSize = (bytes) => {
@@ -318,29 +321,21 @@ const formatFileSize = (bytes) => {
 </script>
 
 <style scoped>
-/* Smooth transitions */
-.transition-all {
-  transition-property: all;
-  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-  transition-duration: 150ms;
+.overflow-x-auto::-webkit-scrollbar {
+  height: 6px;
 }
 
-/* Custom scrollbar for materi list */
-.max-h-48::-webkit-scrollbar {
-  width: 6px;
-}
-
-.max-h-48::-webkit-scrollbar-track {
+.overflow-x-auto::-webkit-scrollbar-track {
   background: #f1f1f1;
   border-radius: 3px;
 }
 
-.max-h-48::-webkit-scrollbar-thumb {
+.overflow-x-auto::-webkit-scrollbar-thumb {
   background: #888;
   border-radius: 3px;
 }
 
-.max-h-48::-webkit-scrollbar-thumb:hover {
+.overflow-x-auto::-webkit-scrollbar-thumb:hover {
   background: #555;
 }
 </style>

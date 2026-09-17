@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\BUilder;
 use Illuminate\Support\Str;
 
 class News extends Model
@@ -39,14 +40,14 @@ class News extends Model
     }
 
     // Scope untuk berita yang dipublikasi
-    public function scopeDipublikasi($query)
+    public function scopeDipublikasi(Builder $query)
     {
         return $query->where('dipublikasi', true)
                     ->orderBy('tanggal_terbit', 'desc');
     }
 
     // Scope untuk berita berdasarkan kategori
-    public function scopeKategori($query, $kategori)
+    public function scopeKategori(Builder $query,Builder $kategori)
     {
         return $query->where('kategori', $kategori);
     }

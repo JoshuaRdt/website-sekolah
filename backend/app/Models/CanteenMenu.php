@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Builder;
 
 class CanteenMenu extends Model
 {
@@ -25,19 +26,19 @@ class CanteenMenu extends Model
     ];
 
     // Scope untuk menu yang tersedia
-    public function scopeTersedia($query)
+    public function scopeTersedia(Builder $query)
     {
         return $query->where('tersedia', true);
     }
 
     // Scope untuk kategori tertentu
-    public function scopeKategori($query, $kategori)
+    public function scopeKategori(Builder $query,Builder $kategori)
     {
         return $query->where('kategori', $kategori);
     }
 
     // Scope untuk menu terpopuler
-    public function scopeTerpopuler($query, $limit = 5)
+    public function scopeTerpopuler(Builder $query, $limit = 5)
     {
         return $query->orderBy('terjual', 'desc')->limit($limit);
     }

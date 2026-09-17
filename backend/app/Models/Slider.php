@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Builder;
 
 class Slider extends Model
 {
@@ -27,7 +28,7 @@ class Slider extends Model
     ];
 
     // Scope untuk mengambil slider yang aktif dan terurut
-    public function scopeAktif($query)
+    public function scopeAktif(Builder $query)
     {
         return $query->where('aktif', true)
                     ->orderBy('urutan', 'asc');

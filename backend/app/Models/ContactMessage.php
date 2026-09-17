@@ -20,7 +20,7 @@ class ContactMessage extends Model
     ];
 
     // Scope untuk pesan yang belum dibaca
-    public function scopeBelumDibaca($query)
+    public function scopeBelumDibaca(Builder $query)
     {
         return $query->where('sudah_dibaca', false)
                     ->orderBy('created_at', 'desc');

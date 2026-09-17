@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Str;
 
 class Competency extends Model
@@ -43,7 +44,7 @@ class Competency extends Model
     }
 
     // Scope untuk kompetensi yang aktif
-    public function scopeAktif($query)
+    public function scopeAktif(Builder $query)
     {
         return $query->where('aktif', true);
     }
